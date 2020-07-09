@@ -1,0 +1,29 @@
+{
+  "name": "superskool",
+  "version": "1.0.0",
+  "description": "Backend assignment",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/samanyu6/SuperSkool.git"
+  },
+  "author": "Samanyu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/samanyu6/SuperSkool/issues"
+  },
+  "homepage": "https://github.com/samanyu6/SuperSkool#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "helmet": "^3.23.3",
+    "mongoose": "^5.9.22",
+    "nodemon": "^2.0.4",
+    "xlsx": "^0.16.3"
+  }
+}
