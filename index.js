@@ -17,12 +17,10 @@ app.use(helmet());
 // Port configuration
 var port = process.env.PORT || 8000;
 
-// Function to retrieve next page
-
-// Function to retrieve next page
+// Function to retrieve next page query (For data too big)
 const nextPages = async (playListID, nextToken, nextData) =>{
     const response = await axios.get('https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=100&pageToken='+nextToken+'&playlistId='+playListID+'&key='+process.env.YOUTUBE_API_KEY)
-                    .then((res1)=>{
+                    .then(async (res1)=>{
 
                         for(let i=0;i<res1.data.items.length;i++){
                             var snip={};
@@ -36,13 +34,12 @@ const nextPages = async (playListID, nextToken, nextData) =>{
                             nextData.push(snip);
                         }
                         
-                        //     if(res1.data.nextPageToken)
-                        //         nextPages(playListID, res1.data.nextPageToken, nextData).then((r)=>{
-                        //             nextData.push(r);
-                        //         });                           
-                        // });
-
-                        return nextData;
+                        if(res1.data.nextPageToken)
+                            // Recursive function to iterate through all the pages of queries that exist.
+                            // Works perfectly (although time consuming) for even the largest playlist on youtube, with 4500+ videos!
+                            return await nextPages(playListID, res1.data.nextPageToken, nextData);                     
+                        else
+                            return nextData;
                     })
                     .catch((e)=> console.log(e));
     
@@ -104,24 +101,49 @@ const getPlaylist = async (playListID) => {
 function writePlaylist(playListID){
     getPlaylist(playListID)
         .then((res)=>{
-                console.log(res.video.length)
-                PlaylistSchema.create({
-                    id: res.id,
-                    title: res.title,
-                    description: res.description,
-                    thumbnails: res.thumbnails,
-                    no_of_vids: res.no_of_vids,
-                    video: res.video
-                }, function(err,playlist){
+            PlaylistSchema.findOne({ id: res.id })
+                .then((err, ret)=>{
                     if(err){
-                        console.log(`${playListID} error------->`);
-                        console.log(err);
+                        console.log(`${playListID} connecting db`);
+                        // return { 
+                        //     'msg': `Error adding the playlist ${playListID} into the database.`,
+                        //     'status': 400
+                        // }
                     }
-                    else if(playlist){  
+                    else if(ret){
                         console.log(`${playListID} added successfully`);
-                    }
-                    else
-                        console.log('error')
+                        // return { 
+                        //     'msg': `${playListID} already exists!`,
+                        //     'status': 200
+                        // } 
+                    } 
+                    else{
+                        PlaylistSchema.create({
+                            id: res.id,
+                            title: res.title,
+                            description: res.description,
+                            thumbnails: res.thumbnails,
+                            no_of_vids: res.no_of_vids,
+                            video: res.video
+                        }, function(err,playlist){
+                            if(err){
+                                console.log(`${playListID} creating doc.`);
+                                // return { 'msg': `Error adding the playlist ${playListID} into the database.`,
+                                //          'status': 400
+                                //        }
+                            }
+                            else if(playlist){  
+                                console.log(`${playListID} added successfully`);
+                                // return { 'msg': `Added ${playListID} into the database successfully.`,
+                                //             'status' : 200
+                                //         }   
+                            }
+                            // else
+                                // return {'msg': `Error connecting to the server`,
+                                //         'status': 500
+                                //        };
+                        });
+                    } 
                 });
            
         })
@@ -129,8 +151,7 @@ function writePlaylist(playListID){
 
 }
 
-
-// Function to retrieve playlists
+// API to retrieve playlist data
 app.get('/playlists', (req,res)=>{
 
     PlaylistSchema.find({}, function(err,playlist){
@@ -141,12 +162,19 @@ app.get('/playlists', (req,res)=>{
     });
 });
 
+// API to read , extract and dump all youtube data and metadata from an excel sheet to a mongoDB database.
 app.get('/readCSV', (req,res)=>{
     var wb = xlsx.readFile('yt_data.xlsx');
     var data = xlsx.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])
-    
+    var message = [];
 
-    writePlaylist('PLdinyWzDfipNMU9M2UqKkaUWIO7v-jGMT');
+    // Iterating over all playlist links present in the Excel and passing it to the Youtube API fetch and MongoDB write function.
+    for(var i=0;i<data.length;i++){
+        writePlaylist(data[i]["Playlist ID"]);
+    }
+
+    res.send("Done!")
+
 });
 
 app.listen(port, ()=>console.log(`Running on port ${port}`))
