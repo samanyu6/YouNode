@@ -105,17 +105,9 @@ function writePlaylist(playListID){
                 .then((err, ret)=>{
                     if(err){
                         console.log(`${playListID} connecting db`);
-                        // return { 
-                        //     'msg': `Error adding the playlist ${playListID} into the database.`,
-                        //     'status': 400
-                        // }
                     }
                     else if(ret){
                         console.log(`${playListID} added successfully`);
-                        // return { 
-                        //     'msg': `${playListID} already exists!`,
-                        //     'status': 200
-                        // } 
                     } 
                     else{
                         PlaylistSchema.create({
@@ -128,20 +120,12 @@ function writePlaylist(playListID){
                         }, function(err,playlist){
                             if(err){
                                 console.log(`${playListID} creating doc.`);
-                                // return { 'msg': `Error adding the playlist ${playListID} into the database.`,
-                                //          'status': 400
-                                //        }
                             }
                             else if(playlist){  
                                 console.log(`${playListID} added successfully`);
-                                // return { 'msg': `Added ${playListID} into the database successfully.`,
-                                //             'status' : 200
-                                //         }   
                             }
-                            // else
-                                // return {'msg': `Error connecting to the server`,
-                                //         'status': 500
-                                //        };
+                            else
+                                console.log("Error connecting to server.");
                         });
                     } 
                 });
@@ -179,8 +163,3 @@ app.get('/readCSV', (req,res)=>{
 
 app.listen(port, ()=>console.log(`Running on port ${port}`))
 
-
-// PL2FEB728FF960FBD9
-// PLfhxmdI1VIPhaSc6MisoxZeHhiASVr4_f
-// PLdinyWzDfipNMU9M2UqKkaUWIO7v-jGMT
-// PLdinyWzDfipO_zPNeIEXy3qxVwYXDCUMf
